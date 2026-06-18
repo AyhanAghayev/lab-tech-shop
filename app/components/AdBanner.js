@@ -1,14 +1,6 @@
-// The ads. On purpose, this is a plain Server Component with NO interactivity
-// and NO knowledge of whether the user has paid. It always renders.
-//
-// Making these obey a "the user went premium" flag is YOUR job (see README.md).
-// You'll need the browser's localStorage to remember the purchase, and
-// localStorage only exists in the browser... so think about where this code
-// is allowed to run.
-//
-// It renders TWO banners so the page feels genuinely cluttered:
-//   1. a scrolling marquee strip across the top of the content
-//   2. a floating, blinking ad card pinned to the bottom-right corner
+'use client';
+
+import { useEffect, useState } from 'react';
 
 const MARQUEE_ADS = [
   "🔥 MEGA DEAL: buy 1 cable, get 0 free!",
@@ -19,12 +11,24 @@ const MARQUEE_ADS = [
 ];
 
 export default function AdBanner() {
+  // Start as null (unknown) to avoid hydration mismatch.
+  // After mount we read localStorage and update.
+  const [isPremium, setIsPremium] = useState(null);
+
+  useEffect(() => {
+    setIsPremium(localStorage.getItem('isPremium') === 'true');
+  }, []);
+
+  // null → first server render / before hydration: render nothing to avoid mismatch.
+  // true → user is premium: no ads.
+  // false → user is free: show ads.
+  if (isPremium !== false) return null;
+
   return (
     <>
       {/* 1) Top marquee strip */}
       <div className="overflow-hidden border-y border-yellow-500/40 bg-yellow-300 text-sm font-bold text-black">
         <div className="ad-marquee flex w-max gap-12 py-2 pl-12">
-          {/* doubled so the scroll loops seamlessly */}
           {[...MARQUEE_ADS, ...MARQUEE_ADS].map((text, i) => (
             <span key={i} className="whitespace-nowrap">
               {text}
